@@ -1,0 +1,1 @@
+"use strict";(globalThis.webpackChunkrtw_translation=globalThis.webpackChunkrtw_translation||[]).push([[903],{1912(a){a.exports=JSON.parse('{"blogBasePath":"/RTW-Translation/blog","blogTitle":"Blog","authorsListPath":"/RTW-Translation/blog/authors"}')}}]);

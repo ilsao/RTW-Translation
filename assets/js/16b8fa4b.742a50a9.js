@@ -1,1 +1,0 @@
-"use strict";(globalThis.webpackChunkrtw_translation=globalThis.webpackChunkrtw_translation||[]).push([[9849],{183(a){a.exports=JSON.parse('{"metadata":{"permalink":"/RTW-Translation/blog","page":1,"postsPerPage":10,"totalPages":1,"totalCount":4,"blogDescription":"Blog","blogTitle":"Blog"}}')}}]);
