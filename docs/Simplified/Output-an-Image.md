@@ -6,9 +6,9 @@ sidebar_position: 2
 
 # PPM 图像格式
 
-当你刚开始编写渲染器时，你应该想一个方法来显示图像。最直接的办法是将图像写入文件，但是图像文件格式实在是太多了。许多格式都非常复杂，所以我通常使用纯文本格式的 ppm 格式。这是 ppm 格式的 Wkipedia 介绍：
+当你刚开始编写渲染器时，你应该想一个方法来显示图像。最直接的办法是将图像写入文件，但是图像文件格式实在是太多了。许多格式都非常复杂，所以我通常使用纯文本格式的 ppm 格式。这是 ppm 格式的 Wikipedia 介绍：
 
-![图 1：PPM 释例](https://raytracing.github.io/images/fig-1.01-ppm.jpg)
+![图 1：PPM 示例](https://raytracing.github.io/images/fig-1.01-ppm.jpg)
 
 让我们写点 C++ 代码来输出该格式：
 
@@ -80,7 +80,7 @@ build\Release\inOneWeekend.exe > image.ppm
 
 上例假设你使用 CMake 构建源码中的 `CMakeLists.txt`。但你可以使用任意你熟悉的构建系统 (与语言)。
 
-在 Mac 或 Linux 中，relese 版本如下运行：
+在 Mac 或 Linux 中，release 版本如下运行：
 
 ```sh
 build/inOneWeekend > image.ppm
@@ -88,7 +88,7 @@ build/inOneWeekend > image.ppm
 
 完整的构建与运行步骤可以在 [项目 README](https://raytracing.github.io/README.md) 中找到。
 
-打开输出文件 (我在 Mac 上使用 `ToyViewer` 打开，但你可以用你喜欢的图像查看器打开。若你的察看器不支持此格式，去 Google "pmm viewer") 会输出此结果：
+打开输出文件 (我在 Mac 上使用 `ToyViewer` 打开，但你可以用你喜欢的图像查看器打开。若你的查看器不支持此格式，去 Google "ppm viewer") 会输出此结果：
 
 ![图 1：第一张 ppm 图像](https://raytracing.github.io/images/img-1.01-first-ppm-image.png)
 
@@ -114,13 +114,13 @@ P3
 ...
 ```
 
-若你的 PPM 文件不符，再次确认你格式化部分的代码。若它**的确**符合，但无法正确显示，那可能是由于行尾格式不同之类的问题而解析错误。为了帮助调试此问题，你可以在 GitHub 项目中找到 `images/test.ppm` 文件。这应该可以帮助确认你的察看器的确可以显示 PPM 格式，并帮助对比你生成的 PPM 文件。
+若你的 PPM 文件不符，再次确认你格式化部分的代码。若它**的确**符合，但无法正确显示，那可能是由于行尾格式不同之类的问题而解析错误。为了帮助调试此问题，你可以在 GitHub 项目中找到 `images/test.ppm` 文件。这应该可以帮助确认你的查看器的确可以显示 PPM 格式，并帮助对比你生成的 PPM 文件。
 
 一些读者回应道，在浏览 Windows 上生成的图像时遇到了问题。这种情况通常由于 PowerShell 输出时使用 UTF-16 编码导致。若你遇到此问题，请到 [讨论 1114](https://github.com/RayTracing/raytracing.github.io/discussions/1114) 查看解决方法。
 
 若一切顺利，那你几乎解决了所有系统与 IDE 相关的问题。此系列剩余部分皆使用相同方式生成渲染图像。
 
-若你想生成其他图像格式，我是 `stb_image.h` 的纷丝。它是一个仅有 `.h` 的库，你可以在 GitHub 上找到它：[https://github.com/nothings/stb](https://github.com/nothings/stb)。
+若你想生成其他图像格式，我是 `stb_image.h` 的粉丝。它是一个仅有 `.h` 的库，你可以在 GitHub 上找到它：[https://github.com/nothings/stb](https://github.com/nothings/stb)。
 
 # 添加一个进度显示器
 
