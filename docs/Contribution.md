@@ -20,7 +20,7 @@ sidebar_position: 4
 
 4. 新增或修改 `RTW-Translation/docs/` 下的文件。注意，你不应该修改其他文件夹下的文件，除非你非常清楚自己在做甚么。
 
-5. 准备部属时，先将所有改动 push 到你的 branch。然后在终端中输入 `npm run deploy`。
+5. 准备部属时，先将所有改动 push 到你的 branch。然后在终端中输入 `cmd /C 'set "GIT_USER=<GITHUB_USERNAME>" && npm run deploy'`。
 
 # 协作流程
 
