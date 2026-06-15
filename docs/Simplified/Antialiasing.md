@@ -14,8 +14,6 @@ sidebar_position: 8
 
 # 8.1 一些隨機數工具
 
-## 一些随机数工具
-
 我们将需要一个随机数生成器，用来返回随机實數。这个函数应该返回一个规范化随机数（canonical random number），按照惯例，其取值范围為：$0 \le n < 1$。这里 1 前面的 “小于” 很重要，因为后面我们有时会利用这一点。
 
 一个简单的方法是使用 `<cstdlib>` 中的 `std::rand()` 函数，它会返回一个范围在 `0` 到 `RAND_MAX` 之间的随机整数。因此，我们可以用下面这段代码得到想要的隨機实数，并將它添加到 `rtweekend.h` 中：
@@ -236,4 +234,7 @@ int main() {
 
 放大產出的圖像，我們可以看出邊緣像素的差別：
 
-![](https://raytracing.github.io/images/img-1.06-antialias-before-after.png)
+<img
+  src="https://raytracing.github.io/images/img-1.06-antialias-before-after.png"
+  width="600"
+/>
