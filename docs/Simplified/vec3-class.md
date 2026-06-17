@@ -146,8 +146,10 @@ void write_color(std::ostream& out, const color& pixel_color) {
 现在我们可以修改我们的 `main` 函数，同时使用这两者：
 
 ```cpp
+// highlight-start
 #include "color.h"
 #include "vec3.h"
+// highlight-end
 
 #include <iostream>
 
@@ -165,8 +167,10 @@ int main() {
     for (int j = 0; j < image_height; j++) {
         std::clog << "\rScanlines remaining: " << (image_height - j) << ' ' << std::flush;
         for (int i = 0; i < image_width; i++) {
+            // highlight-start
             auto pixel_color = color(double(i)/(image_width-1), double(j)/(image_height-1), 0);
             write_color(std::cout, pixel_color);
+            // highlight-end
         }
     }
 
