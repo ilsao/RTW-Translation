@@ -82,20 +82,24 @@ double hit_sphere(const point3& center, double radius, const ray& r) {
 
 其次，请注意 $b$ 的方程中包含一个 −2 的因子。让我们考虑一下，如果令 $b=−2h$，一元二次方程会发生怎样的变化：
 
+$$
 \begin{gathered}
 \frac{-b\pm\sqrt{b^2-4ac}}{2a}\\
 = \frac{-(-2h)\pm\sqrt{(-2h)^2-4ac}}{2a}\\
 =\frac{2h\pm2\sqrt{h^2-ac}}{2a}\\
 =\frac{h\pm\sqrt{h^2-ac}}{a}
 \end{gathered}
+$$
 
 这很好的化简了式子，所以我们将使用它。求解 $h$ 的表达式为：
 
+$$
 \begin{gathered}
 b=-2d\cdot(C-Q)\\
 b=-2h\\
 h=\frac{b}{-2}=d\cdot(C-Q)
 \end{gathered}
+$$
 
 使用以上观察，我们可以将射线与球体求交代码化简如下：
 
