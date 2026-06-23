@@ -407,53 +407,53 @@ inline double degrees_to_radians(double degrees) {
 
 程序文件将首先包含 `rtweekend.h`，因此所有其他头文件（我们代码的大部分将存放在那里）都可以隐式地假设 `rtweekend.h` 已经被包含。头文件仍然需要显式地包含任何其他必要的头文件。我们将记住这些假设并进行一些更新：
 
-```cpp
-#include <iostream>
+```diff
+-#include <iostream>
 ```
 
-```cpp
-#include "ray.h"
+```diff
+-#include "ray.h"
 ```
 
-```cpp
-#include <memory>
+```diff
+-#include <memory>
 #include <vector>
 
-using std::make_shared;
-using std::shared_ptr;
+-using std::make_shared;
+-using std::shared_ptr;
 ```
 
-```cpp
-#include "vec3.h"
+```diff
+-#include "vec3.h"
 ```
 
-```cpp
-#include <cmath> #include <iostream>
+```diff
+-#include <cmath> #include <iostream>
 ```
 
 现在新的 `main` 如下：
 
-```cpp
-#include "rtweekend.h"
+```diff
++#include "rtweekend.h"
 
-#include "color.h"
-#include "ray.h"
-#include "vec3.h"
-#include "hittable.h"
-#include "hittable_list.h"
-#include "sphere.h"
+-#include "color.h"
+-#include "ray.h"
+-#include "vec3.h"
++#include "hittable.h"
++#include "hittable_list.h"
++#include "sphere.h"
 
-#include <iostream>
+-#include <iostream>
 
-double hit_sphere(const point3& center, double radius, const ray& r) {
-    ...
-}
+-double hit_sphere(const point3& center, double radius, const ray& r) {
+-    ...
+-}
 
-color ray_color(const ray& r, const hittable& world) {
-    hit_record rec;
-    if (world.hit(r, 0, infinity, rec)) {
-        return 0.5 * (rec.normal + color(1,1,1));
-    }
++color ray_color(const ray& r, const hittable& world) {
++   hit_record rec;
++   if (world.hit(r, 0, infinity, rec)) {
++       return 0.5 * (rec.normal + color(1,1,1));
++   }
 
     vec3 unit_direction = unit_vector(r.direction());
     auto a = 0.5*(unit_direction.y() + 1.0);
@@ -471,12 +471,12 @@ int main() {
     int image_height = int(image_width / aspect_ratio);
     image_height = (image_height < 1) ? 1 : image_height;
 
-    // 世界
-
-    hittable_list world;
-
-    world.add(make_shared<sphere>(point3(0,0,-1), 0.5));
-    world.add(make_shared<sphere>(point3(0,-100.5,-1), 100));
++   // 世界
++
++   hittable_list world;
++
++   world.add(make_shared<sphere>(point3(0,0,-1), 0.5));
++   world.add(make_shared<sphere>(point3(0,-100.5,-1), 100));
 
     // 相机
 
@@ -509,7 +509,7 @@ int main() {
             auto ray_direction = pixel_center - camera_center;
             ray r(camera_center, ray_direction);
 
-            color pixel_color = ray_color(r, world);
++           color pixel_color = ray_color(r, world);
             write_color(std::cout, pixel_color);
         }
     }
