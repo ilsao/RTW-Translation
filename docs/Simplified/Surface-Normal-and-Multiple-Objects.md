@@ -18,7 +18,7 @@ sidebar_position: 6
 
 [![表 6：球体表面法向量几何结构](https://raytracing.github.io/images/fig-1.06-sphere-normal.jpg)](https://raytracing.github.io/images/fig-1.06-sphere-normal.jpg)
 
-以地球为例，这意味着向量从地心只向你所在的位置，直指你的上方。现在让我们把这个逻辑加入到代码中，并对其进行着色。我们目前还没有加入任何光源之类的东西，所以先单纯地利用颜色映射（Color Map）来将法向量可视化。在可视化法向量时，有一个非常常用的技巧（因为这很容易，而且直观上我们可以假设 $n$ 是一个单位长度向量，也就是说它的每个分量都在 −1 到 1 之间）：将每个分量映射到 0 到 1 的区间内，然后将  $(x,y,z)$ 对应到 $(红, 绿, 蓝)$。为了计算常规的法向量，我们需要获取精确的相交点（Hit Point），而不仅仅是像目前这样只判断“是否相交”。由于目前场景中只有一个球体，且它正好位于相机的正前方，因此我们暂时先不用担心负的 t 值。我们只需直接假设最近的交点（最小的 t）就是我们想要的那个点。通过对代码进行这些修改，我们就能够计算并将 $n$ 可视化出来：
+以地球为例，这意味着向量从地心只向你所在的位置，直指你的上方。现在让我们把这个逻辑加入到代码中，并对其进行着色。我们目前还没有加入任何光源之类的东西，所以先单纯地利用颜色映射（Color Map）来将法向量可视化。在可视化法向量时，有一个非常常用的技巧（因为这很容易，而且直观上我们可以假设 $n$ 是一个单位长度向量，也就是说它的每个分量都在 −1 到 1 之间）：将每个分量映射到 0 到 1 的区间内，然后将  $(x,y,z)$ 对应到 $(红, 绿, 蓝)$。为了计算常规的法向量，我们需要获取精确的相交点（Hit Point），而不仅仅是像目前这样只判断 “是否相交” 。由于目前场景中只有一个球体，且它正好位于相机的正前方，因此我们暂时先不用担心负的 t 值。我们只需直接假设最近的交点（最小的 t）就是我们想要的那个点。通过对代码进行这些修改，我们就能够计算并将 $n$ 可视化出来：
 
 ```cpp
 // highlight-start
@@ -123,9 +123,9 @@ double hit_sphere(const point3& center, double radius, const ray& r) {
 }
 ```
 
-# 6.3. 可碰撞物体的抽象化
+# 6.3. 可击中物体的抽象化
 
-现在，如果是多个球体的情况呢？虽然我们很容易倾向直接使用一个球体数组，但更乾淨的做法是为光线可能击中的任何几何体创建一个“抽象类（Abstract Class）”，并将”单个球体“和“球体列表”都统一视为可以被光线击中的对象。给这个类起什么名字着实让人有些犯难——如果不是因为“面向对象（Object-Oriented）”编程中已经有了这个词，使用“对象（object）”会是个不错的选择。“表面（surface）”也很常用，但缺点是未来我们可能想引入体积（雾、云，或类似的东西）而“可碰撞（hittable）“这个名字突出了将它们统一在一起的核心成员函数。虽然这些名字我都不算最满意，但我们会使用”可碰撞“。
+现在，如果是多个球体的情况呢？虽然我们很容易倾向直接使用一个球体数组，但更乾淨的做法是为光线可能击中的任何几何体创建一个 “抽象类（Abstract Class）” ，并将 ”单个球体“ 和 “球体列表” 都统一视为可以被光线击中的对象。给这个类起什么名字着实让人有些犯难——如果不是因为“面向对象（Object-Oriented）”编程中已经有了这个词，使用 “对象（object）” 会是个不错的选择。 “表面（surface）” 也很常用，但缺点是未来我们可能想引入体积（雾、云，或类似的东西）而 “可击中（hittable）“ 这个名字突出了将它们统一在一起的核心成员函数。虽然这些名字我都不算最满意，但我们会使用 ”可击中“ 。
 
 这个名为 `hittable` 的抽象类将包含一个接收光线的 `hit` 函数。大多数光线追踪器的开发者都发现，为交点引入一个有效区间 $[tmin​,tmax​]$ 会非常方便，也就是说，只有当 $tmin​<t<tmax​$ 时，这次相交才算真正有效。对于最初发射的射线（主射线），这个区间通常是正数 t。但正如我们随后看到的，定义一个区间 $[tmin​,tmax​]$ 可以大大简化我们的代码。另一个架构设计问题是，如果我们击中了某个物体，是否应该立即计算表面法向量等信息？因为在遍历场景的过程中，我们随后可能会击中一个更近的物体，因此我们最终只需要那个最近物体的法向量。在这里，我将採用最简单的解决方案，将所有计算出的一捆信息（交点、法线等）打包存储到某个结构体（Structure）中。以下是这个抽象类的定义：
 
@@ -177,7 +177,7 @@ class sphere : public hittable {
 
         auto sqrtd = std::sqrt(discriminant);
 
-        // Find the nearest root that lies in the acceptable range.
+        // 寻找可接受范围内最近的根
         auto root = (h - sqrtd) / a;
         if (root <= ray_tmin || ray_tmax <= root) {
             root = (h + sqrtd) / a;
@@ -214,10 +214,10 @@ class sphere : public hittable {
 
 ```cpp
 if (dot(ray_direction, outward_normal) > 0.0) {
-    // ray is inside the sphere
+    // 射线在球体内
     ...
 } else {
-    // ray is outside the sphere
+    // 射线在球体外
     ...
 }
 ```
@@ -227,11 +227,11 @@ if (dot(ray_direction, outward_normal) > 0.0) {
 ```cpp
 bool front_face;
 if (dot(ray_direction, outward_normal) > 0.0) {
-    // ray is inside the sphere
+    // 射线在球体内
     normal = -outward_normal;
     front_face = false;
 } else {
-    // ray is outside the sphere
+    // 射线在球体外
     normal = outward_normal;
     front_face = true;
 }
@@ -251,8 +251,8 @@ class hit_record {
     bool front_face;
 
     void set_face_normal(const ray& r, const vec3& outward_normal) {
-        // Sets the hit record normal vector.
-        // NOTE: the parameter `outward_normal` is assumed to have unit length.
+        // 设置撞击记录的法向量。
+        // 注意：参数 outward_normal 被假定为单位长度。
 
         front_face = dot(r.direction(), outward_normal) < 0;
         normal = front_face ? outward_normal : -outward_normal;
@@ -346,23 +346,23 @@ class hittable_list : public hittable {
 #include <memory>
 
 
-// C++ Std Usings
+// C++ 标准库的 using 声明
 
 using std::make_shared;
 using std::shared_ptr;
 
-// Constants
+// 常量
 
 const double infinity = std::numeric_limits<double>::infinity();
 const double pi = 3.1415926535897932385;
 
-// Utility Functions
+// 工具函数
 
 inline double degrees_to_radians(double degrees) {
     return degrees * pi / 180.0;
 }
 
-// Common Headers
+// 常用头文件
 
 #include "color.h"
 #include "ray.h"
@@ -428,43 +428,43 @@ color ray_color(const ray& r, const hittable& world) {
 
 int main() {
 
-    // Image
+    // 图像
 
     auto aspect_ratio = 16.0 / 9.0;
     int image_width = 400;
 
-    // Calculate the image height, and ensure that it's at least 1.
+    // 计算图像的高，并确保它至少为 1。
     int image_height = int(image_width / aspect_ratio);
     image_height = (image_height < 1) ? 1 : image_height;
 
-    // World
+    // 世界
 
     hittable_list world;
 
     world.add(make_shared<sphere>(point3(0,0,-1), 0.5));
     world.add(make_shared<sphere>(point3(0,-100.5,-1), 100));
 
-    // Camera
+    // 相机
 
     auto focal_length = 1.0;
     auto viewport_height = 2.0;
     auto viewport_width = viewport_height * (double(image_width)/image_height);
     auto camera_center = point3(0, 0, 0);
 
-    // Calculate the vectors across the horizontal and down the vertical viewport edges.
+    // 计算视口水平边缘和垂直边缘的向量
     auto viewport_u = vec3(viewport_width, 0, 0);
     auto viewport_v = vec3(0, -viewport_height, 0);
 
-    // Calculate the horizontal and vertical delta vectors from pixel to pixel.
+    // 计算相邻像素间水平和垂直间距向量
     auto pixel_delta_u = viewport_u / image_width;
     auto pixel_delta_v = viewport_v / image_height;
 
-    // Calculate the location of the upper left pixel.
+    // 计算左上角像素的位置
     auto viewport_upper_left = camera_center
                              - vec3(0, 0, focal_length) - viewport_u/2 - viewport_v/2;
     auto pixel00_loc = viewport_upper_left + 0.5 * (pixel_delta_u + pixel_delta_v);
 
-    // Render
+    // 渲染
 
     std::cout << "P3\n" << image_width << ' ' << image_height << "\n255\n";
 
@@ -500,7 +500,7 @@ class interval {
   public:
     double min, max;
 
-    interval() : min(+infinity), max(-infinity) {} // Default interval is empty
+    interval() : min(+infinity), max(-infinity) {} // 预设区间是空的
 
     interval(double min, double max) : min(min), max(max) {}
 
@@ -526,7 +526,7 @@ const interval interval::universe = interval(-infinity, +infinity);
 ```
 
 ```CPP
-// Common Headers
+// 常用头文件
 
 #include "color.h"
 // highlight-start
@@ -584,7 +584,7 @@ class sphere : public hittable {
     // highlight-end
         ...
 
-        // Find the nearest root that lies in the acceptable range.
+        // 寻找可接受范围内最近的根
         auto root = (h - sqrtd) / a;
         // highlight-start
         if (!ray_t.surrounds(root)) {
