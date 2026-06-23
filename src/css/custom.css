@@ -37,3 +37,13 @@ picture {
   --ifm-color-primary-lightest: #4fddbf;
   --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.3);
 }
+
+/* 只要是 - 的行，一律套用淺紅背景 */
+.token.deleted {
+  background-color: rgba(244, 67, 54, 0.15) !important;
+}
+
+/* 只要是 + 的行，一律套用淺綠背景 */
+.token.inserted {
+  background-color: rgba(76, 175, 80, 0.15) !important;
+}
