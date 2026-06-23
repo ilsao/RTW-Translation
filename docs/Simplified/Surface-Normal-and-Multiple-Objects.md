@@ -334,6 +334,40 @@ class hittable_list : public hittable {
 
 # 6.6. 一些新的 C++ 特性
 
+`hittable_list` 类代码中使用了一些 C++ 特性，如果你平时不怎么写 C++，可能会觉得有点陌生：`vector`、`shared_ptr` 和 `make_shared`。
+
+`shared_ptr<type>` 是一个指向某种已分配内存类型的指针，它具有引用计数语义。每当你把它赋值给另一个智能指针时（通常通过简单的赋值操作），它的引用计数就会加 1。当智能指针超出作用域（例如在代码块或函数结束时），引用计数就会减 1。一旦引用计数归零，该对象就会被安全地自动销毁。
+
+通常情况下，智能指针首先会用一个新分配的对象来进行初始化，代码类似于这样：
+
+```cpp
+shared_ptr<double> double_ptr = make_shared<double>(0.37);
+shared_ptr<vec3>   vec3_ptr   = make_shared<vec3>(1.414214, 2.718281, 1.618034);
+shared_ptr<sphere> sphere_ptr = make_shared<sphere>(point3(0,0,0), 1.0);
+```
+
+`make_shared<thing>(thing_constructor_params ...)` 会使用构造函数参数分配一个 `thing` 类型的新实例。它返回一个 `shared_ptr<thing>`。
+
+由于通过 `make_shared<type>(...)` 的返回值可以直接自动推导出来类型，上述代码可以使用 C++ 的 `auto` 类型说明符来更简洁地表达：
+
+```cpp
+auto double_ptr = make_shared<double>(0.37);
+auto vec3_ptr   = make_shared<vec3>(1.414214, 2.718281, 1.618034);
+auto sphere_ptr = make_shared<sphere>(point3(0,0,0), 1.0);
+```
+
+我们在代码中会使用智能指针（shared pointers），因为它们允许不同的几何体共享同一个实例（例如，一大群球体都使用同一种颜色的材质），而且它能实现内存自动管理，让逻辑变得更清晰。
+
+`std::shared_ptr` 包含在 `<memory>` 头文件中。
+
+你可能不太熟悉的第二个 C++ 特性是 `std::vector`。这是一个存储任意类型的通用动态数组。在上面，我们使用了一个存储 `hittable` 指针的集合。随着更多元素的加入，`std::vector` 会自动扩容：`objects.push_back(object)` 会将一个元素添加到 `std::vector` 成员变量 `objects` 的末尾。
+
+`std::vector` 包含在 `<vector>` 头文件中。
+
+最后，代码清单 21 中的 `using` 声明告诉编译器，我们将从 `std` 标准库中引入 `shared_ptr` 和 `make_shared`，因此在每次引用它们时，都不需要再加上 `std::` 前缀。
+
+# 6.7. 常用常量和工具函数
+
 我们将需要的数学常数方便地定义在它们自己的头文件中。目前只需要无穷大，但我们也会把自己的圆周率定义放进去，这稍后会需要。我们还会把常用的实用常数和未来的工具函数放进这里。这个新的头文件，`rtweekend.h`，将成为我们的通用主头文件。
 
 ```cpp
