@@ -135,3 +135,232 @@ class dielectric : public material {
 };
 // diff-add-end
 ```
+
+现在，我们将更新场景来展示折射效果：把左边的球改成玻璃材质，玻璃的折射率大约是 1.5。
+
+```cpp
+auto material_ground = make_shared<lambertian>(color(0.8, 0.8, 0.0));
+auto material_center = make_shared<lambertian>(color(0.1, 0.2, 0.5));
+// diff-add-start
+auto material_left   = make_shared<dielectric>(1.50);
+// diff-add-end
+auto material_right  = make_shared<metal>(color(0.8, 0.6, 0.2), 1.0);
+```
+
+其給出以下結果：
+
+<img
+  src="https://raytracing.github.io/images/img-1.16-glass-always-refract.png"
+  width="600"
+/>
+
+# 11.3 全内反射
+
+折射中有一个比较麻烦的实际问题：对于某些光线角度，用斯涅尔定律是得不到解的。当一条光线以足够贴近表面的掠射角进入折射率较低的介质时，它可能会以大于 $90^\circ$ 的角度发生折射。如果我们回到斯涅尔定律以及 $\sin\theta'$ 的推导：
+
+$$
+\sin\theta' = \frac{\eta}{\eta'} \cdot \sin\theta
+$$
+
+如果光线在玻璃内部，而外部是空气，也就是 $\eta = 1.5$ 且 $\eta' = 1.0$：
+
+$$
+\sin\theta' = \frac{1.5}{1.0} \cdot \sin\theta
+$$
+
+$\sin\theta'$ 的值不可能大于 1。所以，如果
+
+$$
+\frac{1.5}{1.0} \cdot \sin\theta > 1.0
+$$
+
+方程两边的相等关系就被破坏了，也就不存在解。如果不存在解，玻璃就不能发生折射，因此必须反射这条光线：
+
+```cpp
+if (ri * sin_theta > 1.0) {
+    // 必須折射
+    ...
+} else {
+    // 可以折射
+    ...
+}
+```
+
+这里所有光线都会被反射，而且因为在实际中这种情况通常发生在实体物体内部，所以它被称为全内反射 (total internal relfection)。这就是为什么有时候，当你潜在水下时，水和空气的交界面会像一面完美的镜子：如果你在水下向上看，可以看到水面上的东西；但当你靠近水面并侧向看时，水面看起来就像镜子一样。
+
+我们可以用三角恒等式求出 `sin_theta`：
+
+$$
+\sin\theta = \sqrt{1 - \cos^2\theta}
+$$
+
+以及：
+
+$$
+\cos\theta = \mathbf{R} \cdot \mathbf{n}
+$$
+
+```cpp
+double cos_theta = std::fmin(dot(-unit_direction, rec.normal), 1.0);
+double sin_theta = std::sqrt(1.0 - cos_theta*cos_theta);
+
+if (ri * sin_theta > 1.0) {
+    // 必須折射
+    ...
+} else {
+    // 可以折射
+    ...
+}
+```
+
+且这个总是会发生折射的介电材质（在可能折射的情况下）為：
+
+```cpp
+class dielectric : public material {
+  public:
+    dielectric(double refraction_index) : refraction_index(refraction_index) {}
+
+    bool scatter(const ray& r_in, const hit_record& rec, color& attenuation, ray& scattered)
+    const override {
+        attenuation = color(1.0, 1.0, 1.0);
+        double ri = rec.front_face ? (1.0/refraction_index) : refraction_index;
+
+        vec3 unit_direction = unit_vector(r_in.direction());
+        // diff-add-start
+        double cos_theta = std::fmin(dot(-unit_direction, rec.normal), 1.0);
+        double sin_theta = std::sqrt(1.0 - cos_theta*cos_theta);
+
+        bool cannot_refract = ri * sin_theta > 1.0;
+        vec3 direction;
+
+        if (cannot_refract)
+            direction = reflect(unit_direction, rec.normal);
+        else
+            direction = refract(unit_direction, rec.normal, ri);
+
+        scattered = ray(rec.p, direction);
+        // diff-add-end
+        return true;
+    }
+
+  private:
+    // 真空或空气中的折射率，或者材料折射率与包围介质折射率的比值
+    double refraction_index;
+};
+```
+
+衰减始终为 1 —— 玻璃表面不会吸收任何东西。
+
+如果我们用新的 `dielectric::scatter()` 函数渲染之前的场景，会发现……没有变化。嗯？
+
+其实原因是：对于一个折射率大于空气的球体材料来说，不存在任何入射角会产生全内反射——无论是在光线进入球体的位置，还是在光线离开球体的位置都不会。这是由球体的几何形状导致的，因为一条掠射入射的光线总会先被弯折到一个更小的角度，然后在离开时又被弯回原本的角度。
+
+那么我们要怎样展示全内反射呢？如果球体的折射率小于它所在介质的折射率，那么我们就可以用较浅的掠射角打到它，从而得到全外反射。这样应该足够观察到这个效果了。
+
+我们会建模一个充满水的世界，水的折射率大约是 1.33，然后把球体材质改成空气，空气的折射率是 1.00 —— 也就是一个气泡！为此，需要把左边球体材质的折射率改成：
+
+$$
+\frac{\text{空气的折射率}}{\text{水的折射率}}
+$$
+
+```cpp
+auto material_ground = make_shared<lambertian>(color(0.8, 0.8, 0.0));
+auto material_center = make_shared<lambertian>(color(0.1, 0.2, 0.5));
+// diff-add-start
+auto material_left   = make_shared<dielectric>(1.00 / 1.33);
+// diff-add-end
+auto material_right  = make_shared<metal>(color(0.8, 0.6, 0.2), 1.0);
+```
+
+這個改變給出以下渲染圖：
+
+<img
+  src="https://raytracing.github.io/images/img-1.17-air-bubble-total-reflection.png"
+  width="600"
+/>
+
+在这里可以看到，或多或少接近直射的光线会折射，而擦着表面掠过的光线会反射。
+
+# 11.4 Schlick 近似
+
+现实中的玻璃具有随角度变化的反射率——以很陡的角度看窗户时，它就会变得像一面镜子。描述这个现象有一个很大、很丑的方程，但几乎所有人都会使用 Christophe Schlick 提出的一个便宜而且出奇准确的多项式近似。这样我们就得到了完整的玻璃材质：
+
+```cpp
+class dielectric : public material {
+  public:
+    dielectric(double refraction_index) : refraction_index(refraction_index) {}
+
+    bool scatter(const ray& r_in, const hit_record& rec, color& attenuation, ray& scattered)
+    const override {
+        attenuation = color(1.0, 1.0, 1.0);
+        double ri = rec.front_face ? (1.0/refraction_index) : refraction_index;
+
+        vec3 unit_direction = unit_vector(r_in.direction());
+        double cos_theta = std::fmin(dot(-unit_direction, rec.normal), 1.0);
+        double sin_theta = std::sqrt(1.0 - cos_theta*cos_theta);
+
+        bool cannot_refract = ri * sin_theta > 1.0;
+        vec3 direction;
+
+        // diff-add-start
+        if (cannot_refract || reflectance(cos_theta, ri) > random_double())
+        // diff-add-end
+            direction = reflect(unit_direction, rec.normal);
+        else
+            direction = refract(unit_direction, rec.normal, ri);
+
+        scattered = ray(rec.p, direction);
+        return true;
+    }
+
+  private:
+    // 真空或空气中的折射率，或者材料折射率与包围介质折射率的比值
+    double refraction_index;
+
+    // diff-add-start
+    static double reflectance(double cosine, double refraction_index) {
+        // 使用 Schlick 近似來計算折射率
+        auto r0 = (1 - refraction_index) / (1 + refraction_index);
+        r0 = r0*r0;
+        return r0 + (1-r0)*std::pow((1 - cosine),5);
+    }
+    // diff-add-end
+};
+```
+
+# 11.5 建模空心玻璃球
+
+我们来建模一个空心玻璃球。它是一个具有一定厚度的球体，内部还有另一个由空气组成的球。如果你思考一条光线穿过这种物体的路径，它会先打到外层球体，发生折射；然后打到内层球体（假设确实打到了），再次折射，并在内部空气中传播。接着它会继续前进，打到内层球体的内侧表面，折射回去，然后打到外层球体的内侧表面，最后再次折射，退出并回到场景的大气中。
+
+外层球体可以直接用标准的玻璃球建模，折射率大约为 1.50，也就是模拟光线从外部空气进入玻璃。内层球体稍微有点不同，因为它的折射率应该相对于周围外层球体的材料来定义，也就是模拟从玻璃进入内部空气的过渡。
+
+这其实很容易指定，因为介电材质中的 `refraction_index` 参数可以被解释为：物体材料的折射率除以包围介质的折射率。在这个例子中，内层球体的折射率就是空气的折射率（内层球体材料）除以玻璃的折射率（包围介质），也就是：$1.00 / 1.50 = 0.67$
+
+代码如下：
+
+```cpp
+...
+auto material_ground = make_shared<lambertian>(color(0.8, 0.8, 0.0));
+auto material_center = make_shared<lambertian>(color(0.1, 0.2, 0.5));
+// diff-add-start
+auto material_left   = make_shared<dielectric>(1.50);
+auto material_bubble = make_shared<dielectric>(1.00 / 1.50);
+// diff-add-end
+auto material_right  = make_shared<metal>(color(0.8, 0.6, 0.2), 0.0);
+
+world.add(make_shared<sphere>(point3( 0.0, -100.5, -1.0), 100.0, material_ground));
+world.add(make_shared<sphere>(point3( 0.0,    0.0, -1.2),   0.5, material_center));
+world.add(make_shared<sphere>(point3(-1.0,    0.0, -1.0),   0.5, material_left));
+// diff-add-start
+world.add(make_shared<sphere>(point3(-1.0,    0.0, -1.0),   0.4, material_bubble));
+// diff-add-end
+world.add(make_shared<sphere>(point3( 1.0,    0.0, -1.0),   0.5, material_right));
+...
+```
+
+以下是結果：
+
+<img
+  src="https://raytracing.github.io/images/img-1.18-glass-hollow.png"
+  width="600"
+/>
