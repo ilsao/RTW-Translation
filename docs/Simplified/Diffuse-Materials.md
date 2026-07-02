@@ -33,7 +33,7 @@ class vec3 {
         return e[0]*e[0] + e[1]*e[1] + e[2]*e[2];
     }
 
-    // highlight-start
+    // diff-add-start
     static vec3 random() {
         return vec3(random_double(), random_double(), random_double());
     }
@@ -41,7 +41,7 @@ class vec3 {
     static vec3 random(double min, double max) {
         return vec3(random_double(min,max), random_double(min,max), random_double(min,max));
     }
-    // highlight-end
+    // diff-add-end
 };
 ```
 
@@ -74,7 +74,7 @@ inline vec3 unit_vector(const vec3& v) {
     return v / v.length();
 }
 
-// highlight-start
+// diff-add-start
 inline vec3 random_unit_vector() {
     while (true) {
         auto p = vec3::random(-1,1);
@@ -83,7 +83,7 @@ inline vec3 random_unit_vector() {
             return p / sqrt(lensq);
     }
 }
-// highlight-end
+// diff-add-end
 ```
 
 遗憾的是，我们还需要处理一个小小的浮点数抽象泄漏问题。由于浮点数的精度是有限的，一个非常小的数在平方之后可能会下溢为零。因此，如果三个坐标都足够小，也就是非常靠近球心，那么这个向量的范数就会变成零，而对它进行归一化就会得到一个错误的向量 $[\pm\infty, \pm\infty, \pm\infty]$。
@@ -97,9 +97,9 @@ inline vec3 random_unit_vector() {
     while (true) {
         auto p = vec3::random(-1,1);
         auto lensq = p.length_squared();
-        // highlight-start
+        // diff-add-start
         if (1e-160 < lensq && lensq <= 1)
-        // highlight-end
+        // diff-add-end
             return p / sqrt(lensq);
     }
 }
@@ -126,7 +126,7 @@ inline vec3 random_unit_vector() {
     }
 }
 
-// highlight-start
+// diff-add-start
 inline vec3 random_on_hemisphere(const vec3& normal) {
     vec3 on_unit_sphere = random_unit_vector();
     if (dot(on_unit_sphere, normal) > 0.0) // 与法线在相同半球
@@ -134,7 +134,7 @@ inline vec3 random_on_hemisphere(const vec3& normal) {
     else
         return -on_unit_sphere;
 }
-// highlight-end
+// diff-add-end
 ```
 
 如果一条光线从某种材质上反弹之后，保留了它 $100%$ 的颜色，那么我们称这种材质为白色。如果一条光线从某种材质上反弹之后，保留了它 $0%$ 的颜色，那么我们称这种材质为黑色。
@@ -150,10 +150,10 @@ class camera {
         hit_record rec;
 
         if (world.hit(r, interval(0, infinity), rec)) {
-            // highlight-start
+            // diff-add-start
             vec3 direction = random_on_hemisphere(rec.normal);
             return 0.5 * ray_color(ray(rec.p, direction), world);
-            // highlight-end
+            // diff-add-end
         }
 
         vec3 unit_direction = unit_vector(r.direction());
@@ -180,9 +180,9 @@ class camera {
     double aspect_ratio      = 1.0;  // 图像的宽高比
     int    image_width       = 100;  // 以像素计的渲染图像宽
     int    samples_per_pixel = 10;   // 每个像素有多少随机采样
-    // highlight-start
+    // diff-add-start
     int    max_depth         = 10;   // 射线在场景中弹射次数上限
-    // highlight-end
+    // diff-add-end
 
     void render(const hittable& world) {
         initialize();
@@ -195,9 +195,9 @@ class camera {
                 color pixel_color(0,0,0);
                 for (int sample = 0; sample < samples_per_pixel; sample++) {
                     ray r = get_ray(i, j);
-                    // highlight-start
+                    // diff-add-start
                     pixel_color += ray_color(r, max_depth, world);
-                    // highlight-end
+                    // diff-add-end
                 }
                 write_color(std::cout, pixel_samples_scale * pixel_color);
             }
@@ -208,20 +208,20 @@ class camera {
     ...
   private:
     ...
-    // highlight-start
+    // diff-add-start
     color ray_color(const ray& r, int depth, const hittable& world) const {
         // 若超出射线弹射上限，不再收集更多光线
         if (depth <= 0)
             return color(0,0,0);
-    // highlight-end
+    // diff-add-end
 
         hit_record rec;
 
         if (world.hit(r, interval(0, infinity), rec)) {
             vec3 direction = random_on_hemisphere(rec.normal);
-            // highlight-start
+            // diff-add-start
             return 0.5 * ray_color(ray(rec.p, direction), depth-1, world);
-            // highlight-end
+            // diff-add-end
         }
 
         vec3 unit_direction = unit_vector(r.direction());
@@ -242,9 +242,9 @@ int main() {
     cam.aspect_ratio      = 16.0 / 9.0;
     cam.image_width       = 400;
     cam.samples_per_pixel = 100;
-    // highlight-start
+    // diff-add-start
     cam.max_depth         = 50;
-    // highlight-end
+    // diff-add-end
 
     cam.render(world);
 }
@@ -273,9 +273,9 @@ class camera {
 
         hit_record rec;
 
-        // highlight-start
+        // diff-add-start
         if (world.hit(r, interval(0.001, infinity), rec)) {
-            // highlight-end
+            // diff-add-end
             vec3 direction = random_on_hemisphere(rec.normal);
             return 0.5 * ray_color(ray(rec.p, direction), depth-1, world);
         }
@@ -320,9 +320,9 @@ class camera {
         hit_record rec;
 
         if (world.hit(r, interval(0.001, infinity), rec)) {
-            // highlight-start
+            // diff-add-start
             vec3 direction = rec.normal + random_unit_vector();
-            // highlight-end
+            // diff-add-end
             return 0.5 * ray_color(ray(rec.p, direction), depth-1, world);
         }
 
@@ -365,9 +365,9 @@ class camera {
 
         if (world.hit(r, interval(0.001, infinity), rec)) {
             vec3 direction = rec.normal + random_unit_vector();
-            // highlight-start
+            // diff-add-start
             return 0.1 * ray_color(ray(rec.p, direction), depth-1, world);
-            // highlight-end
+            // diff-add-end
         }
 
         vec3 unit_direction = unit_vector(r.direction());
@@ -389,7 +389,7 @@ class camera {
 图像应该存储在 gamma 空间中有很多充分理由，不过对我们来说，只需要意识到这一点就够了。我们将把数据转换到 gamma 空间，这样图像查看器就能更准确地显示我们的图像。作为一个简单近似，我们可以使用 “gamma 2” 作为变换。这个 gamma 值是在从 gamma 空间转换到线性空间时使用的幂次。现在我们需要从线性空间转换到 gamma 空间，也就是取 “gamma 2” 的倒数；这意味着指数为 $1 / gamma$，也就是开平方。我们还需要确保能够稳健地处理负输入。
 
 ```cpp
-// highlight-start
+// diff-add-start
 inline double linear_to_gamma(double linear_component)
 {
     if (linear_component > 0)
@@ -397,7 +397,7 @@ inline double linear_to_gamma(double linear_component)
 
     return 0;
 }
-// highlight-end
+// diff-add-end
 
 void write_color(std::ostream& out, const color& pixel_color) {
     auto r = pixel_color.x();
@@ -409,13 +409,13 @@ void write_color(std::ostream& out, const color& pixel_color) {
     g = linear_to_gamma(g);
     b = linear_to_gamma(b);
 
-    // highlight-start
+    // diff-add-start
     // 将 [0, 1] 分量转换到一个字节的范围 [0, 255]
     static const interval intensity(0.000, 0.999);
     int rbyte = int(256 * intensity.clamp(r));
     int gbyte = int(256 * intensity.clamp(g));
     int bbyte = int(256 * intensity.clamp(b));
-    // highlight-end
+    // diff-add-end
 
     // 写出像素颜色分量
     out << rbyte << ' ' << gbyte << ' ' << bbyte << '\n';
