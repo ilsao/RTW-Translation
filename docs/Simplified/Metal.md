@@ -38,17 +38,17 @@ class material {
 `hit_record` 的作用是避免传入一大堆参数，这样我们就可以把任何想要的信息都塞到里面。你也可以不用这种封装类型，而是直接使用函数参数；这只是个人偏好的问题。`hittable` 和 `material` 在代码中都需要能够引用对方的类型，所以这里会出现某种循环引用。在 C++ 中，我们加入这一行：`class material;`来告诉编译器：`material` 是一个稍后会定义的类。由于我们这里只是指定一个指向该类的指针，编译器不需要知道这个类的具体细节，因此就可以解决循环引用的问题。
 
 ```cpp
-// highlight-start
+// diff-add-start
 class material;
-// highlight-end
+// diff-add-end
 
 class hit_record {
   public:
     point3 p;
     vec3 normal;
-    // highlight-start
+    // diff-add-start
     shared_ptr<material> mat;
-    // highlight-end
+    // diff-add-end
     double t;
     bool front_face;
 
@@ -66,11 +66,11 @@ class hit_record {
 ```cpp
 class sphere : public hittable {
   public:
-    // highlight-start
+    // diff-add-start
     sphere(const point3& center, double radius) : center(center), radius(std::fmax(0,radius)) {
         // TODO: 初始化材质指针 `mat` 
     }
-    // highlight-end
+    // diff-add-end
 
     bool hit(const ray& r, interval ray_t, hit_record& rec) const override {
         ...
@@ -79,9 +79,9 @@ class sphere : public hittable {
         rec.p = r.at(rec.t);
         vec3 outward_normal = (rec.p - center) / radius;
         rec.set_face_normal(r, outward_normal);
-        // highlight-start
+        // diff-add-start
         rec.mat = mat;
-        // highlight-end
+        // diff-add-end
 
         return true;
     }
@@ -89,9 +89,9 @@ class sphere : public hittable {
   private:
     point3 center;
     double radius;
-    // highlight-start
+    // diff-add-start
     shared_ptr<material> mat;
-    // highlight-end
+    // diff-add-end
 };
 ```
 
@@ -106,7 +106,7 @@ class material {
     ...
 };
 
-// highlight-start
+// diff-add-start
 class lambertian : public material {
   public:
     lambertian(const color& albedo) : albedo(albedo) {}
@@ -122,7 +122,7 @@ class lambertian : public material {
   private:
     color albedo;
 };
-// highlight-end
+// diff-add-end
 ```
 
 注意第三种选择：我们可以用某个固定概率 $p$ 来进行散射，并让衰减值为：$\frac{\text{albedo}}{p}$。具体怎么选由你决定。
@@ -141,13 +141,13 @@ class vec3 {
         return e[0]*e[0] + e[1]*e[1] + e[2]*e[2];
     }
 
-    // highlight-start
+    // diff-add-start
     bool near_zero() const {
         // 若向量在所有维度都接近零，返回 true
         auto s = 1e-8;
         return (std::fabs(e[0]) < s) && (std::fabs(e[1]) < s) && (std::fabs(e[2]) < s);
     }
-    // highlight-end
+    // diff-add-end
 
     ...
 };
@@ -162,11 +162,11 @@ class lambertian : public material {
     const override {
         auto scatter_direction = rec.normal + random_unit_vector();
 
-        // highlight-start
+        // diff-add-start
         // 收集退化的散射方向
         if (scatter_direction.near_zero())
             scatter_direction = rec.normal;
-        // highlight-end
+        // diff-add-end
 
         scattered = ray(rec.p, scatter_direction);
         attenuation = albedo;
@@ -198,11 +198,11 @@ inline vec3 random_on_hemisphere(const vec3& normal) {
     ...
 }
 
-// highlight-start
+// diff-add-start
 inline vec3 reflect(const vec3& v, const vec3& n) {
     return v - 2*dot(v,n)*n;
 }
-// highlight-end
+// diff-add-end
 ```
 
 金属材质使用公式反射光线：
@@ -210,7 +210,7 @@ inline vec3 reflect(const vec3& v, const vec3& n) {
 ```cpp
 ...
 
-// highlight-start
+// diff-add-start
 class lambertian : public material {
     ...
 };
@@ -230,16 +230,16 @@ class metal : public material {
   private:
     color albedo;
 };
-// highlight-end
+// diff-add-end
 ```
 
 我们需要修改 `ray_color()` 函数，以适配前面所有这些改动：
 
 ```cpp
 #include "hittable.h"
-// highlight-start
+// diff-add-start
 #include "material.h"
-// highlight-end
+// diff-add-end
 ...
 
 class camera {
@@ -254,13 +254,13 @@ class camera {
         hit_record rec;
 
         if (world.hit(r, interval(0.001, infinity), rec)) {
-            // highlight-start
+            // diff-add-start
             ray scattered;
             color attenuation;
             if (rec.mat->scatter(r, rec, attenuation, scattered))
                 return attenuation * ray_color(scattered, depth-1, world);
             return color(0,0,0);
-            // highlight-end
+            // diff-add-end
         }
 
         vec3 unit_direction = unit_vector(r.direction());
@@ -275,10 +275,10 @@ class camera {
 ```cpp
 class sphere : public hittable {
   public:
-    // highlight-start
+    // diff-add-start
     sphere(const point3& center, double radius, shared_ptr<material> mat)
       : center(center), radius(std::fmax(0,radius)), mat(mat) {}
-    // highlight-end
+    // diff-add-end
 
     ...
 };
@@ -294,15 +294,15 @@ class sphere : public hittable {
 #include "camera.h"
 #include "hittable.h"
 #include "hittable_list.h"
-// highlight-start
+// diff-add-start
 #include "material.h"
-// highlight-end
+// diff-add-end
 #include "sphere.h"
 
 int main() {
     hittable_list world;
 
-    // highlight-start
+    // diff-add-start
     auto material_ground = make_shared<lambertian>(color(0.8, 0.8, 0.0));
     auto material_center = make_shared<lambertian>(color(0.1, 0.2, 0.5));
     auto material_left   = make_shared<metal>(color(0.8, 0.8, 0.8));
@@ -312,7 +312,7 @@ int main() {
     world.add(make_shared<sphere>(point3( 0.0,    0.0, -1.2),   0.5, material_center));
     world.add(make_shared<sphere>(point3(-1.0,    0.0, -1.0),   0.5, material_left));
     world.add(make_shared<sphere>(point3( 1.0,    0.0, -1.0),   0.5, material_right));
-    // highlight-end
+    // diff-add-end
 
     camera cam;
 
@@ -349,28 +349,28 @@ int main() {
 ```cpp
 class metal : public material {
   public:
-    // highlight-start
+    // diff-add-start
     metal(const color& albedo, double fuzz) : albedo(albedo), fuzz(fuzz < 1 ? fuzz : 1) {}
-    // highlight-end
+    // diff-add-end
 
     bool scatter(const ray& r_in, const hit_record& rec, color& attenuation, ray& scattered)
     const override {
         vec3 reflected = reflect(r_in.direction(), rec.normal);
-        // highlight-start
+        // diff-add-start
         reflected = unit_vector(reflected) + (fuzz * random_unit_vector());
-        // highlight-end
+        // diff-add-end
         scattered = ray(rec.p, reflected);
         attenuation = albedo;
-        // highlight-start
+        // diff-add-start
         return (dot(scattered.direction(), rec.normal) > 0);
-        // highlight-end
+        // diff-add-end
     }
 
   private:
     color albedo;
-    // highlight-start
+    // diff-add-start
     double fuzz;
-    // highlight-end
+    // diff-add-end
 };
 ```
 
@@ -381,10 +381,10 @@ int main() {
     ...
     auto material_ground = make_shared<lambertian>(color(0.8, 0.8, 0.0));
     auto material_center = make_shared<lambertian>(color(0.1, 0.2, 0.5));
-    // highlight-start
+    // diff-add-start
     auto material_left   = make_shared<metal>(color(0.8, 0.8, 0.8), 0.3);
     auto material_right  = make_shared<metal>(color(0.8, 0.6, 0.2), 1.0);
-    // highlight-end
+    // diff-add-end
     ...
 }
 ```
