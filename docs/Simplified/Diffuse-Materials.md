@@ -2,27 +2,27 @@
 sidebar_position: 9
 ---
 
-# 9. 漫反射材質
+# 9. 漫反射材质
 
-現在我們已經有了物體，以及每個像素發射多條射線，因此可以開始製作一些看起來更真實的材質。我們先從漫反射材質 (Diffuse Materials，也稱霧面材質 ) 開始。其中一個設計上的問題是：我們是否要將幾何與材質分離，使一個材質可以指定給多個球體，反之亦然；還是要讓幾何與材質緊密綁定在一起。後者對於程序化生成的物體特別有用，因為它們的幾何形狀與材質通常是一起產生、彼此關聯的。本書將採用分離式設計，也就是將幾何與材質分開管理。這是大多數渲染器常見的做法，不過也請注意，實際上還存在其他不同的設計方式。
+现在我们已经有了物体，以及每个像素发射多条射线，因此可以开始制作一些看起来更真实的材质。我们先从漫反射材质 (Diffuse Materials，也称雾面材质 ) 开始。其中一个设计上的问题是：我们是否要将几何与材质分离，使一个材质可以指定给多个球体，反之亦然；还是要让几何与材质紧密绑定在一起。后者对于程序化生成的物体特别有用，因为它们的几何形状与材质通常是一起产生、彼此关联的。本书将采用分离式设计，也就是将几何与材质分开管理。这是大多数渲染器常见的做法，不过也请注意，实际上还存在其他不同的设计方式。
 
-# 9.1 一個簡易漫反射材質
+# 9.1 一个简易漫反射材质
 
-不自行發光的漫反射物體只會呈現周遭環境的顏色，但也會用自身的固有顏色對其進行調變。從漫反射表面反射出的光，其方向會被隨機化；因此，如果我們向兩個漫反射表面之間的縫隙射入三條射線，它們各自都會有不同的隨機行為：
+不自行发光的漫反射物体只会呈现周遭环境的颜色，但也会用自身的固有颜色对其进行调变。从漫反射表面反射出的光，其方向会被随机化；因此，如果我们向两个漫反射表面之间的缝隙射入三条射线，它们各自都会有不同的随机行为：
 
 <img
   src="https://raytracing.github.io/images/fig-1.09-light-bounce.jpg"
   width="600"
 />
 
-它們可能被吸收，而不是被反射。表面越暗，光線就越有可能被吸收（這就是它看起來很暗的原因！）。其實任何可隨機方向的算法，都能產生看起來像霧面材質的表面。我們先從最直觀的方法開始：讓表面把光線隨機、均勻地反彈到所有方向。對於這種材質，一條擊中表面的射線，會以相同的機率朝著遠離表面的任意方向反彈。
+它们可能被吸收，而不是被反射。表面越暗，光线就越有可能被吸收（这就是它看起来很暗的原因！）。其实任何可随机方向的算法，都能产生看起来像雾面材质的表面。我们先从最直观的方法开始：让表面把光线随机、均匀地反弹到所有方向。对于这种材质，一条击中表面的射线，会以相同的机率朝着远离表面的任意方向反弹。
 
 <img
   src="https://raytracing.github.io/images/fig-1.10-random-vec-horizon.jpg"
   width="600"
 />
 
-這種非常直觀的材質是最簡單的一種漫反射材質；事實上，許多早期的光線追蹤論文都使用了這種漫反射方法，後來才改採用更準確的方法，也就是我們稍後會實現的那種方法。我們目前還沒有辦法隨機反射一條射線，所以需要在向量工具頭文件中加入幾個函數。首先，我們需要能夠產生任意的隨機向量：
+这种非常直观的材质是最简单的一种漫反射材质；事实上，许多早期的光线追踪论文都使用了这种漫反射方法，后来才改采用更准确的方法，也就是我们稍后会实现的那种方法。我们目前还没有办法随机反射一条射线，所以需要在向量工具头文件中加入几个函数。首先，我们需要能够产生任意的随机向量：
 
 ```cpp
 class vec3 {
@@ -45,15 +45,15 @@ class vec3 {
 };
 ```
 
-然後，我們要想辦法操作一個隨機向量，讓最終結果只會落在半球的表面上。這件事的確有解析方法可以做到，但那些方法意外地難懂，而且實現起來也相當麻煩。相比之下，我們通常會使用最簡單的算法：拒絕採樣法 (A rejection method) 。拒絕採樣法的做法是：反覆產生隨機樣本，直到產生一個符合我們需求條件的樣本為止。換句話說，就是一直拒絕不好的樣本，直到找到一個好的樣本。
+然后，我们要想办法操作一个随机向量，让最终结果只会落在半球的表面上。这件事的确有解析方法可以做到，但那些方法意外地难懂，而且实现起来也相当麻烦。相比之下，我们通常会使用最简单的算法：拒绝采样法 (A rejection method) 。拒绝采样法的做法是：反覆产生随机样本，直到产生一个符合我们需求条件的样本为止。换句话说，就是一直拒绝不好的样本，直到找到一个好的样本。
 
-使用拒絕採樣法在半球上產生隨機向量，有很多種同樣合理的方法；不過就我們的目的而言，我們會採用最簡單的一種，也就是：
+使用拒绝采样法在半球上产生随机向量，有很多种同样合理的方法；不过就我们的目的而言，我们会采用最简单的一种，也就是：
 
-1. 在單位球內產生一個隨機向量
-2. 將這個向量正則化，使其延伸到球面上
-3. 若正則化後的向量落在錯誤的半球上，則將其反轉
+1. 在单位球内产生一个随机向量
+2. 将这个向量正则化，使其延伸到球面上
+3. 若正则化后的向量落在错误的半球上，则将其反转
 
-首先，我們會使用拒絕採樣法，在單位球內產生隨機向量，也就是半徑為 1 的球。做法是：在包住單位球的立方體內隨機選一個點，也就是讓 $x$、$y$ 和 $z$ 都落在 $[-1,+1]$ 的範圍內。如果這個點位於單位球外面，那就重新產生一個新的點，直到找到一個位於單位球內部或球面上的點為止。
+首先，我们会使用拒绝采样法，在单位球内产生随机向量，也就是半径为 1 的球。做法是：在包住单位球的立方体内随机选一个点，也就是让 $x$、$y$ 和 $z$ 都落在 $[-1,+1]$ 的范围内。如果这个点位于单位球外面，那就重新产生一个新的点，直到找到一个位于单位球内部或球面上的点为止。
 
 <img
   src="https://raytracing.github.io/images/fig-1.11-sphere-vec.jpg"
@@ -65,7 +65,7 @@ class vec3 {
   width="600"
 />
 
-下面是我們第一版的代碼：
+下面是我们第一版的代码：
 
 ```cpp
 ...
@@ -105,7 +105,7 @@ inline vec3 random_unit_vector() {
 }
 ```
 
-現在我們有了一個隨機向量，我們可以通過與表面法線比對，來判斷該隨機向量是否落在正確的半球：
+现在我们有了一个随机向量，我们可以通过与表面法线比对，来判断该随机向量是否落在正确的半球：
 
 <img
   src="https://raytracing.github.io/images/fig-1.13-surface-normal.jpg"
@@ -129,7 +129,7 @@ inline vec3 random_unit_vector() {
 // highlight-start
 inline vec3 random_on_hemisphere(const vec3& normal) {
     vec3 on_unit_sphere = random_unit_vector();
-    if (dot(on_unit_sphere, normal) > 0.0) // In the same hemisphere as the normal
+    if (dot(on_unit_sphere, normal) > 0.0) // 与法线在相同半球
         return on_unit_sphere;
     else
         return -on_unit_sphere;
@@ -163,25 +163,25 @@ class camera {
 };
 ```
 
-... 的確，我們得到了一個相對不錯的灰色球體：
+... 的确，我们得到了一个相对不错的灰色球体：
 
 <img
   src="https://raytracing.github.io/images/img-1.07-first-diffuse.png"
   width="600"
 />
 
-# 9.2 限制子射線的數量
+# 9.2 限制子射线的数量
 
 这里潜藏着一个问题。注意，`ray_color` 函数是递归的。那它什么时候会停止递归呢？当射线没有击中任何物体的时候。然而在某些情况下，这可能会持续很久，久到足以导致栈溢出。为了避免这种情况，我们来限制最大递归深度：当达到最大深度时，就不再返回任何光照贡献。
 
 ```cpp
 class camera {
   public:
-    double aspect_ratio      = 1.0;  // Ratio of image width over height
-    int    image_width       = 100;  // Rendered image width in pixel count
-    int    samples_per_pixel = 10;   // Count of random samples for each pixel
+    double aspect_ratio      = 1.0;  // 图像的宽高比
+    int    image_width       = 100;  // 以像素计的渲染图像宽
+    int    samples_per_pixel = 10;   // 每个像素有多少随机采样
     // highlight-start
-    int    max_depth         = 10;   // Maximum number of ray bounces into scene
+    int    max_depth         = 10;   // 射线在场景中弹射次数上限
     // highlight-end
 
     void render(const hittable& world) {
@@ -210,7 +210,7 @@ class camera {
     ...
     // highlight-start
     color ray_color(const ray& r, int depth, const hittable& world) const {
-        // If we've exceeded the ray bounce limit, no more light is gathered.
+        // 若超出射线弹射上限，不再收集更多光线
         if (depth <= 0)
             return color(0,0,0);
     // highlight-end
@@ -231,7 +231,7 @@ class camera {
 };
 ```
 
-更新 `main()` 函數以採用新的深度限制：
+更新 `main()` 函数以采用新的深度限制：
 
 ```cpp
 int main() {
@@ -250,14 +250,14 @@ int main() {
 }
 ```
 
-對於這個非常簡單的場景，我們應該得到一個幾乎一致的結果：
+对于这个非常简单的场景，我们应该得到一个几乎一致的结果：
 
 <img
   src="https://raytracing.github.io/images/img-1.08-second-diffuse.png"
   width="600"
 />
 
-# 解決阴影痤疮问题
+# 解决阴影痤疮问题
 
 还有一个需要我们处理的微妙 bug。当一条光线与某个表面相交时，它会尝试精确地计算交点。不幸的是，这个计算很容易受到浮点数舍入误差的影响，导致算出来的交点出现极其微小的偏差。这意味着下一条光线的起点，也就是从表面随机散射出去的那条光线的起点，不太可能和表面完全贴合。它可能刚好在表面上方，也可能刚好在表面下方。如果这条光线的起点刚好在表面下方，那么它就可能再次与这个表面相交。也就是说，它会在 $t = 0.00000001$，或者 hit 函数给出的某个浮点近似值处，找到最近的表面。解决这个问题最简单的 hack，就是直接忽略那些离计算出的交点非常近的命中结果：
 
@@ -267,7 +267,7 @@ class camera {
   private:
     ...
     color ray_color(const ray& r, int depth, const hittable& world) const {
-        // If we've exceeded the ray bounce limit, no more light is gathered.
+        // 若超出射线弹射上限，不再收集更多光线
         if (depth <= 0)
             return color(0,0,0);
 
@@ -287,7 +287,7 @@ class camera {
 };
 ```
 
-這解決了暗影痔瘡 (Shadow Acne) 的問題。對，就是這麼叫。以下是結果：
+这解决了暗影痔疮 (Shadow Acne) 的问题。对，就是这么叫。以下是结果：
 
 <img
   src="https://raytracing.github.io/images/img-1.09-no-acne.png"
@@ -307,13 +307,13 @@ class camera {
   width="600"
 />
 
-這個修改其實非常小：
+这个修改其实非常小：
 
 ```cpp
 class camera {
     ...
     color ray_color(const ray& r, int depth, const hittable& world) const {
-        // If we've exceeded the ray bounce limit, no more light is gathered.
+        // 若超出射线弹射上限，不再收集更多光线
         if (depth <= 0)
             return color(0,0,0);
 
@@ -333,7 +333,7 @@ class camera {
 };
 ```
 
-渲染後我們會得到一個類似的圖像：
+渲染后我们会得到一个类似的图像：
 
 <img
   src="https://raytracing.github.io/images/img-1.10-correct-lambertian.png"
@@ -357,7 +357,7 @@ class camera {
 class camera {
     ...
     color ray_color(const ray& r, int depth, const hittable& world) const {
-        // If we've exceeded the ray bounce limit, no more light is gathered.
+        // 若超出射线弹射上限，不再收集更多光线
         if (depth <= 0)
             return color(0,0,0);
 
@@ -404,25 +404,25 @@ void write_color(std::ostream& out, const color& pixel_color) {
     auto g = pixel_color.y();
     auto b = pixel_color.z();
 
-    // Apply a linear to gamma transform for gamma 2
+    // 为 gamma 2 应用一个线性变换到 gamma
     r = linear_to_gamma(r);
     g = linear_to_gamma(g);
     b = linear_to_gamma(b);
 
     // highlight-start
-    // Translate the [0,1] component values to the byte range [0,255].
+    // 将 [0, 1] 分量转换到一个字节的范围 [0, 255]
     static const interval intensity(0.000, 0.999);
     int rbyte = int(256 * intensity.clamp(r));
     int gbyte = int(256 * intensity.clamp(g));
     int bbyte = int(256 * intensity.clamp(b));
     // highlight-end
 
-    // Write out the pixel color components.
+    // 写出像素颜色分量
     out << rbyte << ' ' << gbyte << ' ' << bbyte << '\n';
 }
 ```
 
-使用 gamma 矯正，我们现在会得到一个从暗到亮更加一致的渐变效果：
+使用 gamma 矫正，我们现在会得到一个从暗到亮更加一致的渐变效果：
 
 <img
   src="https://raytracing.github.io/images/img-1.12-gamma-gamut.png"
