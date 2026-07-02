@@ -2,7 +2,7 @@
 sidebar_position: 11
 ---
 
-# 11. 介電質
+# 11. 介电质
 
 像水、玻璃和钻石这样的透明材料都是介电质。当一条光线打到它们时，光线会分成一条反射光线和一条折射（透射）光线。我们会通过在反射和折射之间随机选择来处理这件事，也就是每次相互作用只生成一条散射光线。
 
@@ -147,7 +147,7 @@ auto material_left   = make_shared<dielectric>(1.50);
 auto material_right  = make_shared<metal>(color(0.8, 0.6, 0.2), 1.0);
 ```
 
-其給出以下結果：
+其给出以下结果：
 
 <img
   src="https://raytracing.github.io/images/img-1.16-glass-always-refract.png"
@@ -178,7 +178,7 @@ $$
 
 ```cpp
 if (ri * sin_theta > 1.0) {
-    // 必須折射
+    // 必须折射
     ...
 } else {
     // 可以折射
@@ -205,7 +205,7 @@ double cos_theta = std::fmin(dot(-unit_direction, rec.normal), 1.0);
 double sin_theta = std::sqrt(1.0 - cos_theta*cos_theta);
 
 if (ri * sin_theta > 1.0) {
-    // 必須折射
+    // 必须折射
     ...
 } else {
     // 可以折射
@@ -213,7 +213,7 @@ if (ri * sin_theta > 1.0) {
 }
 ```
 
-且这个总是会发生折射的介电材质（在可能折射的情况下）為：
+且这个总是会发生折射的介电材质（在可能折射的情况下）为：
 
 ```cpp
 class dielectric : public material {
@@ -272,7 +272,7 @@ auto material_left   = make_shared<dielectric>(1.00 / 1.33);
 auto material_right  = make_shared<metal>(color(0.8, 0.6, 0.2), 1.0);
 ```
 
-這個改變給出以下渲染圖：
+这个改变给出以下渲染图：
 
 <img
   src="https://raytracing.github.io/images/img-1.17-air-bubble-total-reflection.png"
@@ -319,7 +319,7 @@ class dielectric : public material {
 
     // diff-add-start
     static double reflectance(double cosine, double refraction_index) {
-        // 使用 Schlick 近似來計算折射率
+        // 使用 Schlick 近似来计算折射率
         auto r0 = (1 - refraction_index) / (1 + refraction_index);
         r0 = r0*r0;
         return r0 + (1-r0)*std::pow((1 - cosine),5);
@@ -358,7 +358,7 @@ world.add(make_shared<sphere>(point3( 1.0,    0.0, -1.0),   0.5, material_right)
 ...
 ```
 
-以下是結果：
+以下是结果：
 
 <img
   src="https://raytracing.github.io/images/img-1.18-glass-hollow.png"
