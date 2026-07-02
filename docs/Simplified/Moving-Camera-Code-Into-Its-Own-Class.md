@@ -55,7 +55,7 @@ class camera {
 
 
     color ray_color(const ray& r, const hittable& world) const {
-	    // highlight-start
+	    // diff-add-start
         hit_record rec;
 
         if (world.hit(r, interval(0, infinity), rec)) {
@@ -65,7 +65,7 @@ class camera {
         vec3 unit_direction = unit_vector(r.direction());
         auto a = 0.5*(unit_direction.y() + 1.0);
         return (1.0-a)*color(1.0, 1.0, 1.0) + a*color(0.5, 0.7, 1.0);
-        // highlight-end
+        // diff-add-end
     }
 };
 
@@ -77,7 +77,7 @@ class camera {
 ```cpp
 class camera {
   public:
-  // highlight-start
+  // diff-add-start
     double aspect_ratio = 1.0;  // 图像的宽高比
     int    image_width  = 100;  // 渲染图像的宽度（以像素为单位）
 
@@ -100,10 +100,10 @@ class camera {
 
         std::clog << "\rDone.                 \n";
     }
-    // highlight-end
+    // diff-add-end
 
   private:
-  // highlight-start
+  // diff-add-start
     int    image_height;   // 渲染图像的高
     point3 center;         // 相机中心
     point3 pixel00_loc;    // 像素 0, 0 的位置
@@ -134,7 +134,7 @@ class camera {
             center - vec3(0, 0, focal_length) - viewport_u/2 - viewport_v/2;
         pixel00_loc = viewport_upper_left + 0.5 * (pixel_delta_u + pixel_delta_v);
     }
-    // highlight-end
+    // diff-add-end
 
     color ray_color(const ray& r, const hittable& world) const {
         ...

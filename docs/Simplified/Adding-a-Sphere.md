@@ -91,7 +91,7 @@ $$
  如果我们直接把这些数学公式写死到程序中，我们就可以进行代码测试了：在 $z$ 轴上 -1 的位置放置一个小球然后将任何与该球体相交的像素涂成红色。
 
 ```cpp
-// heighlight-start
+// diff-add-start
 bool hit_sphere(const point3& center, double radius, const ray& r) {
     vec3 oc = center - r.origin();
     auto a = dot(r.direction(), r.direction());
@@ -100,13 +100,13 @@ bool hit_sphere(const point3& center, double radius, const ray& r) {
     auto discriminant = b*b - 4*a*c;
     return (discriminant >= 0);
 }
-// highlight-end
+// diff-add-end
 
 color ray_color(const ray& r) {
-// highlight-start
+// diff-add-start
     if (hit_sphere(point3(0,0,-1), 0.5, r))
         return color(1, 0, 0);
-// highlight-end
+// diff-add-end
 
     vec3 unit_direction = unit_vector(r.direction());
     auto a = 0.5*(unit_direction.y() + 1.0);

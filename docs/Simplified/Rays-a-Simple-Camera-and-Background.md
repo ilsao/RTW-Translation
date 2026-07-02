@@ -95,24 +95,24 @@ auto viewport_width = viewport_height * (double(image_width)/image_height);
 
 ```cpp
 #include "color.h"
-// highlight-start
+// diff-add-start
 #include "ray.h"
-// highlight-end
+// diff-add-end
 #include "vec3.h"
 
 #include <iostream>
 
-// highlight-start
+// diff-add-start
 color ray_color(const ray& r) {
     return color(0,0,0);
 }
-// highlight-end
+// diff-add-end
 
 int main() {
 
     // 图像
 
-	// highlight-start
+	// diff-add-start
     auto aspect_ratio = 16.0 / 9.0;
     int image_width = 400;
 
@@ -139,7 +139,7 @@ int main() {
     auto viewport_upper_left = camera_center
                              - vec3(0, 0, focal_length) - viewport_u/2 - viewport_v/2;
     auto pixel00_loc = viewport_upper_left + 0.5 * (pixel_delta_u + pixel_delta_v);
-	// highlight-end
+	// diff-add-end
 
     // 渲染
 
@@ -148,13 +148,13 @@ int main() {
     for (int j = 0; j < image_height; j++) {
         std::clog << "\rScanlines remaining: " << (image_height - j) << ' ' << std::flush;
         for (int i = 0; i < image_width; i++) {
-	        // highlight-start
+	        // diff-add-start
             auto pixel_center = pixel00_loc + (i * pixel_delta_u) + (j * pixel_delta_v);
             auto ray_direction = pixel_center - camera_center;
             ray r(camera_center, ray_direction);
 
             color pixel_color = ray_color(r);
-            // highlight-end
+            // diff-add-end
             write_color(std::cout, pixel_color);
         }
     }
@@ -181,11 +181,11 @@ $$blendedValue=(1-a)\cdot startValue+a\cdot endValue,$$
 
 
 color ray_color(const ray& r) {
-	// highlight-start
+	// diff-add-start
     vec3 unit_direction = unit_vector(r.direction());
     auto a = 0.5*(unit_direction.y() + 1.0);
     return (1.0-a)*color(1.0, 1.0, 1.0) + a*color(0.5, 0.7, 1.0);
-    // highlight-end
+    // diff-add-end
 }
 
 ...
