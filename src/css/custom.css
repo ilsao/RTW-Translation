@@ -47,3 +47,36 @@ picture {
 .token.inserted {
   background-color: rgba(76, 175, 80, 0.15) !important;
 }
+
+.code-block-diff-add-line,
+.code-block-diff-remove-line {
+  display: block;
+  margin: 0 calc(-1 * var(--ifm-pre-padding));
+  padding: 0 var(--ifm-pre-padding);
+}
+
+.code-block-diff-add-line {
+  background-color: rgba(76, 175, 80, 0.15);
+}
+
+.code-block-diff-remove-line {
+  background-color: rgba(244, 67, 54, 0.15);
+}
+
+.code-block-diff-add-line::before,
+.code-block-diff-remove-line::before {
+  display: inline-block;
+  width: var(--ifm-pre-padding);
+  margin-left: calc(-1 * var(--ifm-pre-padding));
+  user-select: none;
+}
+
+.code-block-diff-add-line::before {
+  color: #2e8555;
+  content: '+';
+}
+
+.code-block-diff-remove-line::before {
+  color: #d32f2f;
+  content: '-';
+}

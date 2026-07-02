@@ -21,32 +21,32 @@ sidebar_position: 6
 以地球为例，这意味着向量从地心只向你所在的位置，直指你的上方。现在让我们把这个逻辑加入到代码中，并对其进行着色。我们目前还没有加入任何光源之类的东西，所以先单纯地利用颜色映射（Color Map）来将法向量可视化。在可视化法向量时，有一个非常常用的技巧（因为这很容易，而且直观上我们可以假设 $n$ 是一个单位长度向量，也就是说它的每个分量都在 −1 到 1 之间）：将每个分量映射到 0 到 1 的区间内，然后将  $(x,y,z)$ 对应到 $(红, 绿, 蓝)$。为了计算常规的法向量，我们需要获取精确的相交点（Hit Point），而不仅仅是像目前这样只判断 “是否相交” 。由于目前场景中只有一个球体，且它正好位于相机的正前方，因此我们暂时先不用担心负的 t 值。我们只需直接假设最近的交点（最小的 t）就是我们想要的那个点。通过对代码进行这些修改，我们就能够计算并将 $n$ 可视化出来：
 
 ```cpp
-// highlight-start
+// diff-add-start
 double hit_sphere(const point3& center, double radius, const ray& r) {
-// highlight-end
+// diff-add-end
     vec3 oc = center - r.origin();
     auto a = dot(r.direction(), r.direction());
     auto b = -2.0 * dot(r.direction(), oc);
     auto c = dot(oc, oc) - radius*radius;
     auto discriminant = b*b - 4*a*c;
 
-    // highlight-start
+    // diff-add-start
     if (discriminant < 0) {
         return -1.0;
     } else {
         return (-b - std::sqrt(discriminant) ) / (2.0*a);
     }
-    // highlight-end
+    // diff-add-end
 }
 
 color ray_color(const ray& r) {
-	// highlight-start
+	// diff-add-start
     auto t = hit_sphere(point3(0,0,-1), 0.5, r);
     if (t > 0.0) {
         vec3 N = unit_vector(r.at(t) - vec3(0,0,-1));
         return 0.5*color(N.x()+1, N.y()+1, N.z()+1);
     }
-    // highlight-end
+    // diff-add-end
 
     vec3 unit_direction = unit_vector(r.direction());
     auto a = 0.5*(unit_direction.y() + 1.0);
@@ -106,19 +106,19 @@ $$
 ```cpp
 double hit_sphere(const point3& center, double radius, const ray& r) {
     vec3 oc = center - r.origin();
-    // highlight-start
+    // diff-add-start
     auto a = r.direction().length_squared();
     auto h = dot(r.direction(), oc);
     auto c = oc.length_squared() - radius*radius;
     auto discriminant = h*h - a*c;
-    // highlight-end
+    // diff-add-end
 
     if (discriminant < 0) {
         return -1.0;
     } else {
-	    // highlight-start
+	    // diff-add-start
         return (h - std::sqrt(discriminant)) / a;
-        // highlight-end
+        // diff-add-end
     }
 }
 ```
@@ -247,7 +247,7 @@ class hit_record {
     point3 p;
     vec3 normal;
     double t;
-    // highlight-start
+    // diff-add-start
     bool front_face;
 
     void set_face_normal(const ray& r, const vec3& outward_normal) {
@@ -257,7 +257,7 @@ class hit_record {
         front_face = dot(r.direction(), outward_normal) < 0;
         normal = front_face ? outward_normal : -outward_normal;
     }
-    // highlight-end
+    // diff-add-end
 };
 ```
 
@@ -272,10 +272,10 @@ class sphere : public hittable {
 
         rec.t = root;
         rec.p = r.at(rec.t);
-        // highlight-start
+        // diff-add-start
         vec3 outward_normal = (rec.p - center) / radius;
         rec.set_face_normal(r, outward_normal);
-        // highlight-end
+        // diff-add-end
 
         return true;
     }
@@ -407,53 +407,70 @@ inline double degrees_to_radians(double degrees) {
 
 程序文件将首先包含 `rtweekend.h`，因此所有其他头文件（我们代码的大部分将存放在那里）都可以隐式地假设 `rtweekend.h` 已经被包含。头文件仍然需要显式地包含任何其他必要的头文件。我们将记住这些假设并进行一些更新：
 
-```diff
--#include <iostream>
+```cpp
+// diff-remove
+#include <iostream>
 ```
 
-```diff
--#include "ray.h"
+```cpp
+// diff-remove
+#include "ray.h"
 ```
 
-```diff
--#include <memory>
+```cpp
+// diff-remove
+#include <memory>
 #include <vector>
 
--using std::make_shared;
--using std::shared_ptr;
+// diff-remove-start
+using std::make_shared;
+using std::shared_ptr;
+// diff-remove-end
 ```
 
-```diff
--#include "vec3.h"
+```cpp
+// diff-remove
+#include "vec3.h"
 ```
 
-```diff
--#include <cmath> #include <iostream>
+```cpp
+// diff-remove
+#include <cmath> #include <iostream>
 ```
 
 现在新的 `main` 如下：
 
-```diff
-+#include "rtweekend.h"
+```cpp
+// diff-add
+#include "rtweekend.h"
 
--#include "color.h"
--#include "ray.h"
--#include "vec3.h"
-+#include "hittable.h"
-+#include "hittable_list.h"
-+#include "sphere.h"
+// diff-remove-start
+#include "color.h"
+#include "ray.h"
+#include "vec3.h"
+// diff-remove-end
+// diff-add-start
+#include "hittable.h"
+#include "hittable_list.h"
+#include "sphere.h"
+// diff-add-end
 
--#include <iostream>
+// diff-remove
+#include <iostream>
 
--double hit_sphere(const point3& center, double radius, const ray& r) {
--    ...
--}
+// diff-remove-start
+double hit_sphere(const point3& center, double radius, const ray& r) {
+    ...
+}
+// diff-remove-end
 
-+color ray_color(const ray& r, const hittable& world) {
-+   hit_record rec;
-+   if (world.hit(r, 0, infinity, rec)) {
-+       return 0.5 * (rec.normal + color(1,1,1));
-+   }
+// diff-add-start
+color ray_color(const ray& r, const hittable& world) {
+   hit_record rec;
+   if (world.hit(r, 0, infinity, rec)) {
+       return 0.5 * (rec.normal + color(1,1,1));
+   }
+// diff-add-end
 
     vec3 unit_direction = unit_vector(r.direction());
     auto a = 0.5*(unit_direction.y() + 1.0);
@@ -471,12 +488,14 @@ int main() {
     int image_height = int(image_width / aspect_ratio);
     image_height = (image_height < 1) ? 1 : image_height;
 
-+   // 世界
-+
-+   hittable_list world;
-+
-+   world.add(make_shared<sphere>(point3(0,0,-1), 0.5));
-+   world.add(make_shared<sphere>(point3(0,-100.5,-1), 100));
+// diff-add-start
+   // 世界
+
+   hittable_list world;
+
+   world.add(make_shared<sphere>(point3(0,0,-1), 0.5));
+   world.add(make_shared<sphere>(point3(0,-100.5,-1), 100));
+// diff-add-end
 
     // 相机
 
@@ -509,7 +528,8 @@ int main() {
             auto ray_direction = pixel_center - camera_center;
             ray r(camera_center, ray_direction);
 
-+           color pixel_color = ray_color(r, world);
+            // diff-add
+            color pixel_color = ray_color(r, world);
             write_color(std::cout, pixel_color);
         }
     }
@@ -563,9 +583,9 @@ const interval interval::universe = interval(-infinity, +infinity);
 // 常用头文件
 
 #include "color.h"
-// highlight-start
+// diff-add-start
 #include "interval.h"
-// highlight-end
+// diff-add-end
 #include "ray.h"
 #include "vec3.h"
 ```
@@ -574,9 +594,9 @@ const interval interval::universe = interval(-infinity, +infinity);
 class hittable {
   public:
     ...
-    // highlight-start
+    // diff-add-start
     virtual bool hit(const ray& r, interval ray_t, hit_record& rec) const = 0;
-    // highlight-end
+    // diff-add-end
 };
 ```
 
@@ -584,19 +604,19 @@ class hittable {
 class hittable_list : public hittable {
   public:
     ...
-    // highlight-start
+    // diff-add-start
     bool hit(const ray& r, interval ray_t, hit_record& rec) const override {
-    // highlight-end
+    // diff-add-end
         hit_record temp_rec;
         bool hit_anything = false;
-        // highlight-start
+        // diff-add-start
         auto closest_so_far = ray_t.max;
-        // highlight-end
+        // diff-add-end
 
         for (const auto& object : objects) {
-	        // highlight-start
+	        // diff-add-start
             if (object->hit(r, interval(ray_t.min, closest_so_far), temp_rec)) {
-            // highlight-end
+            // diff-add-end
                 hit_anything = true;
                 closest_so_far = temp_rec.t;
                 rec = temp_rec;
@@ -613,20 +633,20 @@ class hittable_list : public hittable {
 class sphere : public hittable {
   public:
     ...
-    // highlight-start
+    // diff-add-start
     bool hit(const ray& r, interval ray_t, hit_record& rec) const override {
-    // highlight-end
+    // diff-add-end
         ...
 
         // 寻找可接受范围内最近的根
         auto root = (h - sqrtd) / a;
-        // highlight-start
+        // diff-add-start
         if (!ray_t.surrounds(root)) {
-        // highlight-end
+        // diff-add-end
             root = (h + sqrtd) / a;
-            // highlight-start
+            // diff-add-start
             if (!ray_t.surrounds(root))
-            // highlight-end
+            // diff-add-end
                 return false;
         }
         ...
@@ -638,9 +658,9 @@ class sphere : public hittable {
 ```cpp
 color ray_color(const ray& r, const hittable& world) {
     hit_record rec;
-    // highlight-start
+    // diff-add-start
     if (world.hit(r, interval(0, infinity), rec)) {
-    // highlight-end
+    // diff-add-end
         return 0.5 * (rec.normal + color(1,1,1));
     }
 

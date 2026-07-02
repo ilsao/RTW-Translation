@@ -20,9 +20,9 @@ sidebar_position: 8
 
 ```cpp {}
 #include <cmath>
-// highlight-start
+// diff-add-start
 #include <cstdlib>
-// highlight-end
+// diff-add-end
 #include <iostream>
 #include <limits>
 #include <memory>
@@ -34,7 +34,7 @@ inline double degrees_to_radians(double degrees) {
     return degrees * pi / 180.0;
 }
 
-// highlight-start
+// diff-add-start
 inline double random_double() {
     // 返回一个在 [0,1) 上的随机实数
     return std::rand() / (RAND_MAX + 1.0);
@@ -44,7 +44,7 @@ inline double random_double(double min, double max) {
     // 返回一个在 [min,max) 上的随机实数
     return min + (max-min)*random_double();
 }
-// highlight-end
+// diff-add-end
 ```
 
 传统上 C++ 并没有标准的随机数生成器，不过较新版本的 C++ 已经通过 `<random>` 头文件解决了这个问题（尽管一些专家认为这个方案并不完美）。如果你想用它，可以按照下面的方式生成一个满足我们需求的随机数：
@@ -52,19 +52,19 @@ inline double random_double(double min, double max) {
 ``` cpp
 ...
 
-// highlight-start
+// diff-add-start
 #include <random>
-// highlight-end
+// diff-add-end
 
 ...
 
-// highlight-start
+// diff-add-start
 inline double random_double() {
     static std::uniform_real_distribution<double> distribution(0.0, 1.0);
     static std::mt19937 generator;
     return distribution(generator);
 }
-// highlight-end
+// diff-add-end
 
 inline double random_double(double min, double max) {
     // 返回一个范围在 [min,max) 上的随机实数
@@ -89,13 +89,13 @@ class interval {
         return min < x && x < max;
     }
 
-    // highlight-start
+    // diff-add-start
     double clamp(double x) const {
         if (x < min) return min;
         if (x > max) return max;
         return x;
     }
-    // highlight-end
+    // diff-add-end
     ...
 };
 ```
@@ -103,9 +103,9 @@ class interval {
 下面是更新后的 `write_color()` 函数，它引入了区间钳制函数：
 
 ``` cpp
-// highlight-start
+// diff-add-start
 #include "interval.h"
-// highlight-end
+// diff-add-end
 #include "vec3.h"
 
 using color = vec3;
@@ -116,12 +116,12 @@ void write_color(std::ostream& out, const color& pixel_color) {
     auto b = pixel_color.z();
 
     // 将 [0, 1] 分量变换到自结范围 [0, 255]
-    // highlight-start
+    // diff-add-start
     static const interval intensity(0.000, 0.999);
     int rbyte = int(256 * intensity.clamp(r));
     int gbyte = int(256 * intensity.clamp(g));
     int bbyte = int(256 * intensity.clamp(b));
-    // highlight-end
+    // diff-add-end
 
     // 写出像素颜色分量
     out << rbyte << ' ' << gbyte << ' ' << bbyte << '\n';
@@ -135,9 +135,9 @@ class camera {
   public:
     double aspect_ratio      = 1.0;  // 图像宽度与高度的比值
     int    image_width       = 100;  // 渲染图像宽 (以像素为单位)
-    // highlight-start
+    // diff-add-start
     int    samples_per_pixel = 10;   // 每个像素的随机采样数
-    // highlight-end
+    // diff-add-end
 
     void render(const hittable& world) {
         initialize();
@@ -147,14 +147,14 @@ class camera {
         for (int j = 0; j < image_height; j++) {
             std::clog << "\rScanlines remaining: " << (image_height - j) << ' ' << std::flush;
             for (int i = 0; i < image_width; i++) {
-                // highlight-start
+                // diff-add-start
                 color pixel_color(0,0,0);
                 for (int sample = 0; sample < samples_per_pixel; sample++) {
                     ray r = get_ray(i, j);
                     pixel_color += ray_color(r, world);
                 }
                 write_color(std::cout, pixel_samples_scale * pixel_color);
-                // highlight-end
+                // diff-add-end
             }
         }
 
@@ -163,9 +163,9 @@ class camera {
     ...
   private:
     int    image_height;         // 渲染图像高
-    // highlight-start
+    // diff-add-start
     double pixel_samples_scale;  // 像素样本总和的颜色缩放因子
-    // highlight-end
+    // diff-add-end
     point3 center;               // 摄像机中心
     point3 pixel00_loc;          // 像素 0, 0 的位置
     vec3   pixel_delta_u;        // 像素到其右侧的偏移量
@@ -175,15 +175,15 @@ class camera {
         image_height = int(image_width / aspect_ratio);
         image_height = (image_height < 1) ? 1 : image_height;
 
-        // highlight-start
+        // diff-add-start
         pixel_samples_scale = 1.0 / samples_per_pixel;
-        // highlight-end
+        // diff-add-end
 
         center = point3(0, 0, 0);
         ...
     }
 
-    // highlight-start
+    // diff-add-start
     ray get_ray(int i, int j) const {
         // 从 origin 构造出一个摄像机设限，其指向像素位置 i, j 附近的随机采样点
 
@@ -202,7 +202,7 @@ class camera {
         // 返回单位正方形 [-.5, -.5]-[+.5, +.5] 内的随机点向量
         return vec3(random_double() - 0.5, random_double() - 0.5, 0);
     }
-    // highlight-end
+    // diff-add-end
 
     color ray_color(const ray& r, const hittable& world) const {
         ...
@@ -224,9 +224,9 @@ int main() {
 
     cam.aspect_ratio      = 16.0 / 9.0;
     cam.image_width       = 400;
-    // highlight-start
+    // diff-add-start
     cam.samples_per_pixel = 100;
-    // highlight-end
+    // diff-add-end
 
     cam.render(world);
 }
