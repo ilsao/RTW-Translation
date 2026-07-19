@@ -20,9 +20,9 @@ sidebar_position: 12
 ``` cpp
 class camera {
   public:
-    double aspect_ratio      = 1.0;  // 影像宽高比（影像宽度与高度的比例）
-    int    image_width       = 100;  // 渲染影像的宽度（以像素数表示）
-    int    samples_per_pixel = 10;   // 每个像素的随机采样次数
+    double aspect_ratio      = 1.0;  // 图像宽度与高度的比值
+    int    image_width       = 100;  // 渲染图像宽 (以像素为单位)
+    int    samples_per_pixel = 10;   // 每个像素的随机采样数
     int    max_depth         = 10;   // 光线在场景中最多可反弹的次数
 
     double vfov = 90;  // 垂直视角
@@ -41,22 +41,22 @@ class camera {
 
         center = point3(0, 0, 0);
 
-        // 计算视口的尺寸。
+        // 确定视口维度。
         auto focal_length = 1.0;
         auto theta = degrees_to_radians(vfov);
         auto h = std::tan(theta/2);
         auto viewport_height = 2 * h * focal_length;
         auto viewport_width = viewport_height * (double(image_width)/image_height);
 
-        // 计算视口水平与垂直边缘所对应的向量。
+        // 计算视口水平边缘和垂直边缘的向量
         auto viewport_u = vec3(viewport_width, 0, 0);
         auto viewport_v = vec3(0, -viewport_height, 0);
 
-        // 计算相邻像素之间在水平与垂直方向上的位移向量。
+        // 计算相邻像素间水平和垂直间距向量
         pixel_delta_u = viewport_u / image_width;
         pixel_delta_v = viewport_v / image_height;
 
-        // 计算左上角第一个像素中心的位置。
+        // 计算左上角像素的位置
         auto viewport_upper_left =
             center - vec3(0, 0, focal_length) - viewport_u/2 - viewport_v/2;
         pixel00_loc = viewport_upper_left + 0.5 * (pixel_delta_u + pixel_delta_v);
@@ -127,9 +127,9 @@ int main() {
 ```cpp
 class camera {
   public:
-    double aspect_ratio      = 1.0;  // 影像宽高比（影像宽度与高度的比例）
-    int    image_width       = 100;  // 渲染影像的宽度（以像素数表示）
-    int    samples_per_pixel = 10;   // 每个像素的随机采样次数
+    double aspect_ratio      = 1.0;  // 图像宽度与高度的比值
+    int    image_width       = 100;  // 渲染图像宽 (以像素为单位)
+    int    samples_per_pixel = 10;   // 每个像素的随机采样数
     int    max_depth         = 10;   // 光线在场景中最多可反弹的次数
 
     double vfov     = 90;              // 垂直视角（视野角，Field of View）
@@ -142,14 +142,14 @@ class camera {
 ...
 
   private:
-    int    image_height;         // 渲染影像的高度
-    double pixel_samples_scale;  // 像素采样总和的颜色缩放系数
+    int    image_height;         // 渲染图像高
+    double pixel_samples_scale;  // 像素样本总和的颜色缩放因子
     point3 center;               // 相机中心
-    point3 pixel00_loc;          // (0, 0) 像素中心的位置
-    vec3   pixel_delta_u;        // 向右相邻一个像素的位移向量
-    vec3   pixel_delta_v;        // 向下相邻一个像素的位移向量
+    point3 pixel00_loc;          // 像素 0, 0 的位置
+    vec3   pixel_delta_u;        // 像素到其右侧的偏移量
+    vec3   pixel_delta_v;        // 像素到其下的偏移量
     // diff-add-start
-    vec3   u, v, w;              // 相机座标系的基底向量
+    vec3   u, v, w;              // 相机坐标系的基底向量
     // diff-add-end
 
 
@@ -160,11 +160,11 @@ class camera {
         center = lookfrom;
         // diff-add-end
 
-        // 计算视口的尺寸。
+        // 确定视口维度。
         auto focal_length = (lookfrom - lookat).length();
         ...
 
-        // 计算相机座标系的 u、v、w 单位基底向量。
+        // 计算相机坐标系的 u、v、w 单位基底向量。
         // diff-add-start
         w = unit_vector(lookfrom - lookat);
         // diff-add-end
@@ -172,16 +172,16 @@ class camera {
         v = cross(w, u);
 
         // diff-add-start
-        // 计算视口水平与垂直边缘所对应的向量。
-        vec3 viewport_u = viewport_width * u;    // 视口水平边缘方向向量
-        vec3 viewport_v = viewport_height * -v;  // 视口垂直边缘方向向量（向下）
+        // 计算视口水平边缘和垂直边缘的向量
+        vec3 viewport_u = viewport_width * u;    // 视口水平边缘向量
+        vec3 viewport_v = viewport_height * -v;  // 视口垂直边缘向量（向下）
         // diff-add-end
 
-        // 计算相邻像素之间在水平与垂直方向上的位移向量。
+        // 计算相邻像素间水平和垂直间距向量
         pixel_delta_u = viewport_u / image_width;
         pixel_delta_v = viewport_v / image_height;
 
-        // 计算左上角第一个像素中心的位置。
+        // 计算左上角像素的位置
         // diff-add-start
         auto viewport_upper_left = center - (focal_length * w) - viewport_u/2 - viewport_v/2;
         // diff-add-end
