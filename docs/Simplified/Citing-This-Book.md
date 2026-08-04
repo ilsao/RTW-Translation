@@ -13,8 +13,8 @@ sidebar_position: 16
 - **作者**：Peter Shirley、Trevor David Black、Steve Hollasch
 - **版本/版次**：v4.0.2
 - **日期**：2025-04-25
-- **URL（系列）**：<https://raytracing.github.io/>
-- **URL（本书）**：<https://raytracing.github.io/books/RayTracingInOneWeekend.html>
+- **URL（系列）**：[https://raytracing.github.io/](https://raytracing.github.io/)
+- **URL（本书）**：[https://raytracing.github.io/books/RayTracingInOneWeekend.html](https://raytracing.github.io/books/RayTracingInOneWeekend.html)
 
 ## 16.2 引用示例
 
