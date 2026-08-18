@@ -4,8 +4,11 @@
 
 ![《Ray Tracing in One Weekend》封面](https://raw.githubusercontent.com/RayTracing/raytracing.github.io/release/images/cover/CoverRTW1-small.jpg)
 
-- [在线阅读](https://ilsao.github.io/RTW-Translation/)
-- [英文原著](https://raytracing.github.io/books/RayTracingInOneWeekend.html)
+📖 在线阅读：
+[https://ilsao.github.io/RTW-Translation/](https://ilsao.github.io/RTW-Translation/)
+
+🌐 原作：
+[https://raytracing.github.io/books/RayTracingInOneWeekend.html](https://raytracing.github.io/books/RayTracingInOneWeekend.html)
 
 ## 翻译进度
 
